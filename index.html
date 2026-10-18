@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Border Surveillance Rover - Live Demo</title>
+<style>
+:root{--bg:#0a1020;--card:#121c2f;--line:#243552;--acc:#ff9800;--blue:#4fc3f7;--ok:#4caf50;--bad:#f44336;--tx:#e8eef7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:Segoe UI,Arial,sans-serif;padding:16px}
+h1{margin:6px 0;font-size:26px}h1 span{color:var(--acc)}
+p.sub{margin:0 0 14px;color:#9fb3d1}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;max-width:940px;margin:0 auto 16px}
+canvas{width:100%;height:auto;background:#0c1424;border-radius:8px;display:block}
+.hud{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:10px}
+.hud div{background:#0c1424;border:1px solid var(--line);border-radius:8px;padding:8px}
+.hud small{display:block;color:#7f93b3;font-size:11px}.hud b{font-size:17px}
+#warn{min-height:26px;color:var(--bad);font-weight:700;margin-top:8px}
+kbd{background:#243552;border-radius:4px;padding:2px 7px;margin:0 2px;border-bottom:2px solid #0a1020}
+.hint{color:#9fb3d1;margin:6px 0 0}
+#parts button{background:#0c1424;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:4px;font-size:14px;cursor:pointer}
+#parts button:hover,#parts button.on{border-color:var(--acc);color:var(--acc)}
+#info{margin-top:10px;padding:12px;background:#0c1424;border-radius:8px;border-left:3px solid var(--acc);min-height:80px}
+code{color:var(--blue)}
+a{color:var(--acc)}footer{text-align:center;color:#7f93b3;font-size:13px}
+</style></head><body>
+<div class="card" style="border:0;background:none;padding:0">
+<h1>Border Surveillance <span>Rover</span> &middot; live demo</h1>
+<p class="sub">A simulation of the real dashboard. Same keys, same double-tap turbo, same 20 cm obstacle stop.</p></div>
+
+<div class="card">
+<canvas id="c" width="900" height="460"></canvas>
+<div class="hud">
+<div><small>MODE</small><b id="m">STOPPED</b></div>
+<div><small>RADAR DISTANCE</small><b id="d">--</b></div>
+<div><small>HEADING</small><b id="h">0&deg;</b></div>
+<div><small>GPS (simulated)</small><b id="g">--</b></div>
+<div><small>TILT (simulated)</small><b id="t">0&deg;</b></div></div>
+<div id="warn"></div>
+<p class="hint"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows drive &middot; <kbd>R</kbd> spin &middot; <b>double-tap</b> a key and hold for FAST &middot; <kbd>Space</kbd> stop</p>
+</div>
+
+<div class="card"><h2 style="margin-top:0">Click a part</h2>
+<div id="parts"></div><div id="info">Pick a component to see what it does and where it connects.</div></div>
+<footer>Border Surveillance Rover &middot; Divya Sharma, Shivansh Agrawal, Tanmay Shukla &middot; educational prototype, passive observation only</footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const cv=$('c'),x=cv.getContext('2d'),W=cv.width,H=cv.height;
+const R={x:W/2,y:H-60,a:-Math.PI/2};
+const rocks=[{x:190,y:250,r:20},{x:700,y:210,r:24},{x:470,y:150,r:16},{x:330,y:340,r:14},{x:760,y:330,r:18}];
+const I={x:120,y:112,r:11,vx:40};
+const keys=new Set(),fast=new Set(),last={};
+const MAP={w:'w',arrowup:'w',s:'s',arrowdown:'s',a:'a',arrowleft:'a',d:'d',arrowright:'d',r:'r'};
+let sw=0,dir=1,pts=[],prev=performance.now();
+
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();
+ if(k===' '){keys.clear();fast.clear();e.preventDefault();return}
+ const m=MAP[k];if(!m)return;e.preventDefault();if(e.repeat)return;
+ const n=Date.now();if(last[m]&&n-last[m]<350)fast.add(m);else fast.delete(m);
+ last[m]=n;keys.add(m)});
+addEventListener('keyup',e=>{const m=MAP[e.key.toLowerCase()];if(m){keys.delete(m);fast.delete(m)}});
+addEventListener('blur',()=>{keys.clear();fast.clear()});
+
+function cast(a){for(let d=26;d<=240;d+=4){
+ const px=R.x+Math.cos(a)*d,py=R.y+Math.sin(a)*d;
+ if(py<62)return{d,px,py,k:0};
+ for(const o of rocks)if(Math.hypot(px-o.x,py-o.y)<o.r)return{d,px,py,k:0};
+ if(Math.hypot(px-I.x,py-I.y)<I.r)return{d,px,py,k:1}}
+ return null}
+
+function step(dt,now){
+ const f=keys.has('w')?1:keys.has('s')?-1:0,t=(keys.has('d')?1:0)-(keys.has('a')?1:0);
+ const fa=[...keys].some(k=>fast.has(k)),sp=fa?1:.6;
+ const fr=cast(R.a),frontCm=fr?Math.round((fr.d-26)*.8):999;
+ const blocked=f>0&&frontCm<20;
+ const v=blocked?0:f*170*sp,w=keys.has('r')?5.5*(fa?1.4:1):t*2.4*sp;
+ R.a+=w*dt;
+ const nx=R.x+Math.cos(R.a)*v*dt,ny=R.y+Math.sin(R.a)*v*dt;
+ if(nx>30&&nx<W-30&&ny>80&&ny<H-30&&rocks.every(o=>Math.hypot(nx-o.x,ny-o.y)>o.r+24)){R.x=nx;R.y=ny}
+ I.x+=I.vx*dt;if(I.x>W-80||I.x<80)I.vx*=-1;
+ sw+=dir*1.6*dt;if(Math.abs(sw)>1.2)dir*=-1;
+ const h=cast(R.a+sw),dist=h?Math.round((h.d-26)*.8):0;
+ if(h)pts.push({x:h.px,y:h.py,t:now,k:h.k});
+ pts=pts.filter(p=>now-p.t<2200);
+ const moving=keys.size>0&&(v!==0||w!==0);
+ $('m').textContent=moving?(fa?'FAST':'NORMAL'):'STOPPED';
+ $('m').style.color=moving&&fa?'#ff9800':'';
+ $('d').textContent=dist?dist+' cm':'no echo';
+ $('h').textContent=Math.round(((R.a*180/Math.PI+90)%360+360)%360)+'\u00b0';
+ $('g').textContent=(20.5937+(H-R.y)*1e-5).toFixed(5)+', '+(78.9629+(R.x-W/2)*1e-5).toFixed(5);
+ $('t').textContent=Math.round(w*4+(v>0?-2:v<0?2:0))+'\u00b0';
+ $('warn').textContent=blocked?'OBSTACLE - forward blocked':(pts.some(p=>p.k&&now-p.t<300)?'INTRUDER DETECTED':'');
+}
+
+function draw(now){
+ x.clearRect(0,0,W,H);
+ x.strokeStyle='#142038';x.lineWidth=1;
+ for(let i=0;i<W;i+=50){x.beginPath();x.moveTo(i,0);x.lineTo(i,H);x.stroke()}
+ for(let j=0;j<H;j+=50){x.beginPath();x.moveTo(0,j);x.lineTo(W,j);x.stroke()}
+ x.strokeStyle='#3a5382';x.lineWidth=2;x.beginPath();x.moveTo(0,60);x.lineTo(W,60);x.stroke();
+ x.lineWidth=3;for(let i=20;i<W;i+=60){x.beginPath();x.moveTo(i,44);x.lineTo(i,70);x.stroke()}
+ rocks.forEach(o=>{x.fillStyle='#2a3a57';x.beginPath();x.arc(o.x,o.y,o.r,0,7);x.fill()});
+ const pulse=(Math.sin(now/200)+1)/2;
+ x.fillStyle='#f44336';x.beginPath();x.arc(I.x,I.y,I.r,0,7);x.fill();
+ x.strokeStyle='rgba(244,67,54,'+(.2+.4*pulse)+')';x.lineWidth=2;x.beginPath();x.arc(I.x,I.y,I.r+6+pulse*6,0,7);x.stroke();
+ const ba=R.a+sw,g=x.createRadialGradient(R.x,R.y,10,R.x,R.y,240);
+ g.addColorStop(0,'rgba(79,195,247,.35)');g.addColorStop(1,'rgba(79,195,247,0)');
+ x.fillStyle=g;x.beginPath();x.moveTo(R.x,R.y);x.arc(R.x,R.y,240,ba-.07,ba+.07);x.closePath();x.fill();
+ pts.forEach(p=>{x.globalAlpha=1-(now-p.t)/2200;x.fillStyle=p.k?'#f44336':'#4caf50';x.beginPath();x.arc(p.x,p.y,4,0,7);x.fill()});
+ x.globalAlpha=1;
+ x.save();x.translate(R.x,R.y);x.rotate(R.a);
+ x.strokeStyle='rgba(76,175,80,'+(1-pulse)+')';x.lineWidth=2;x.beginPath();x.arc(0,0,22+pulse*14,0,7);x.stroke();
+ x.fillStyle='#0d1626';[-14,0,14].forEach(px=>{x.fillRect(px-6,-20,12,6);x.fillRect(px-6,14,12,6)});
+ x.fillStyle='#26385a';x.strokeStyle='#4fc3f7';x.lineWidth=1.5;x.fillRect(-22,-15,44,30);x.strokeRect(-22,-15,44,30);
+ x.fillStyle='#1b2a47';x.strokeStyle='#ff9800';x.beginPath();x.arc(22,0,7,0,7);x.fill();x.stroke();
+ x.fillStyle=Math.floor(now/500)%2?'#f44336':'#5a1a16';x.beginPath();x.arc(22,0,2.5,0,7);x.fill();
+ x.restore();
+}
+
+function loop(now){const dt=Math.min(.05,(now-prev)/1000);prev=now;step(dt,now);draw(now);requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+
+const parts={
+ 'ESP32 brain':['Runs the WiFi hotspot, the dashboard, motor PWM, sensor reads and the failsafe.','Motors <code>GPIO 25/26/27/14</code> &middot; servo <code>13</code> &middot; ultrasonic <code>18/19</code> &middot; GPS <code>16/17</code> &middot; IMU <code>21/22</code>'],
+ 'BTS7960 drivers':['Two 43 A H-bridges, one per side, three motors each. Different PWM per side gives tank-style turns.','<code>RPWM/LPWM</code> from GPIO 25/26 (left) and 27/14 (right) &middot; <code>R_EN, L_EN, VCC</code> to 3V3 &middot; <code>B+/B-</code> to the 7.4 V battery'],
+ 'Radar (HC-SR04 + SG90)':['A servo sweeps the ultrasonic sensor 20\u00b0-160\u00b0. Every step becomes a dot on the radar. Forward motion stops under 20 cm.','TRIG <code>GPIO 18</code> &middot; ECHO <code>GPIO 19</code> through a resistor divider &middot; servo <code>GPIO 13</code> &middot; both on 5 V'],
+ 'GPS NEO-6M':['Sends NMEA text over UART. The ESP32 parses position, satellites and speed itself, no library needed.','TX to <code>GPIO 16</code> &middot; RX to <code>GPIO 17</code> &middot; 3V3 &middot; needs open sky'],
+ 'IMU MPU6050':['Gives pitch, roll and a relative turn angle, and flags the rover if it tips over.','SDA <code>GPIO 21</code> &middot; SCL <code>GPIO 22</code> &middot; 3V3'],
+ 'ESP32-CAM':['Streams video over WiFi to the laptop. It has its own 5 V supply so motor noise cannot reset it.','Only 5 V and GND. No data wires to the main ESP32.'],
+ 'Power':['Two 18650 cells in series (7.4 V) feed only the motors. A power bank feeds the ESP32. The camera has a third, separate supply.','All grounds joined. Never connect the battery pack to the ESP32 pins.']
+};
+Object.keys(parts).forEach(k=>{const b=document.createElement('button');b.textContent=k;
+ b.onclick=()=>{document.querySelectorAll('#parts button').forEach(n=>n.classList.remove('on'));b.classList.add('on');
+  $('info').innerHTML='<b>'+k+'</b><br>'+parts[k][0]+'<br><br>'+parts[k][1]};
+ $('parts').appendChild(b)});
+</script></body></html>
