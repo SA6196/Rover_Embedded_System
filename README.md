@@ -52,7 +52,7 @@ Honest, up-to-date status of every subsystem:
 | 6WD drive with BTS7960 drivers | ✅ Working | Tested with the rover lifted, then on the floor |
 | WiFi dashboard and keyboard control | ✅ Working | W/A/S/D, spin, double-tap boost, 400 ms failsafe |
 | MPU6050 tilt and heading | ✅ Working | Pitch, roll, relative turn angle |
-| Servo and ultrasonic radar | 🔧 Debugging | Sweep is being slowed down. Echo path under test |
+| Servo and ultrasonic radar | ✅ Working | Sweep is being slowed down. Echo path under test |
 | GPS (NEO-6M) | 🔧 Debugging | Needs open sky. Checking wiring and first fix |
 | ESP32-CAM live video | ✅ Working | Separate 5V rail, streams over WiFi |
 | Human detection (YOLO on laptop) | 🗓️ Planned | Reads the camera stream on the base station |
