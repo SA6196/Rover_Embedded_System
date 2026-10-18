@@ -54,7 +54,7 @@ Honest, up-to-date status of every subsystem:
 | MPU6050 tilt and heading | ✅ Working | Pitch, roll, relative turn angle |
 | Servo and ultrasonic radar | 🔧 Debugging | Sweep is being slowed down. Echo path under test |
 | GPS (NEO-6M) | 🔧 Debugging | Needs open sky. Checking wiring and first fix |
-| ESP32-CAM live video | 🚧 In progress | Separate 5V rail, streams over WiFi |
+| ESP32-CAM live video | ✅ Working | Separate 5V rail, streams over WiFi |
 | Human detection (YOLO on laptop) | 🗓️ Planned | Reads the camera stream on the base station |
 
 <sub>✅ working · 🔧 being fixed · 🚧 being built · 🗓️ planned</sub>
