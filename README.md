@@ -284,12 +284,12 @@ The dashboard shows a live **radar view**, **distance**, **pitch / roll / headin
 - [x] 6WD differential drive
 - [x] WiFi dashboard with keyboard control and failsafe
 - [x] MPU6050 tilt and heading
-- [ ] Slower, smoother servo sweep
+- [x] Slower, smoother servo sweep
 - [ ] Reliable ultrasonic radar and obstacle stop
-- [ ] GPS fix and route logging
-- [ ] ESP32-CAM live video in the dashboard
+- [x] GPS fix and route logging
+- [x] ESP32-CAM live video in the dashboard
 - [ ] Human detection (YOLO) on the base station
-- [ ] Waypoint navigation with a compass module
+- [x] Waypoint navigation with a compass module
 - [ ] Weatherproof enclosure
 
 ---
