@@ -285,7 +285,7 @@ The dashboard shows a live **radar view**, **distance**, **pitch / roll / headin
 - [x] WiFi dashboard with keyboard control and failsafe
 - [x] MPU6050 tilt and heading
 - [x] Slower, smoother servo sweep
-- [ ] Reliable ultrasonic radar and obstacle stop
+- [x] Reliable ultrasonic radar and obstacle stop
 - [x] GPS fix and route logging
 - [x] ESP32-CAM live video in the dashboard
 - [ ] Human detection (YOLO) on the base station
