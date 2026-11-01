@@ -12,7 +12,7 @@
 ![Status](https://img.shields.io/badge/status-working_prototype-yellow?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
-### A 6-wheel, WiFi-controlled ground rover with ultrasonic radar, GPS, IMU and live video, built from about ₹4,000 of hobby parts.
+### A 6-wheel, WiFi-controlled ground rover with ultrasonic radar, GPS, IMU and live video, built under ₹4,000 of hobby parts.
 
 [Overview](#-overview) · [Status](#-project-status) · [Architecture](#-architecture) · [Hardware](#-hardware) · [Wiring](#-wiring) · [Quick start](#-quick-start) · [Controls](#-controls) · [Roadmap](#-roadmap) · [Team](#-team)
 
